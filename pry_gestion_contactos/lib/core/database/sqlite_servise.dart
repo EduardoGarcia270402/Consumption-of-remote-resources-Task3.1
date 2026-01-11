@@ -10,17 +10,17 @@ class SQLiteService {
       path,
       version: 1,
       onCreate: (db, _) async {
-        await db.execute(
-          '''
+        await db.execute('''
           CREATE TABLE contactos(
 
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             nombre TEXT,
             descripcion TEXT,
-            foto TEXT
+            foto TEXT,
+            telefono TEXT,
+            email TEXT
           )
-        '''
-        );
+        ''');
       },
     );
   }

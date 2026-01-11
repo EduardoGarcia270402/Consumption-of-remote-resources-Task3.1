@@ -10,4 +10,5 @@ class GestionarContactos {
   //metodos
   Future<List<Contacto>> listar () => repository.obtenerContacto();
   Future<void> agregar(Contacto c) => repository.agregarContacto(c);
+  Future<List<Contacto>> buscar(String n, bool asc) =>repository.buscar(n, asc);
 }

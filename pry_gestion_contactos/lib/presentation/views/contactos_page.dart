@@ -5,13 +5,38 @@ import 'package:url_launcher/url_launcher.dart';
 import '../providers/contacto_provider.dart';
 import '../../domain/entities/contacto.dart';
 
-class ContactosPage extends ConsumerWidget {
+class ContactosPage extends ConsumerStatefulWidget {
   const ContactosPage({super.key});
 
-  // ===============================
-  // NUEVO: funciones de UI (presentation)
-  // ===============================
+  @override
+  ConsumerState<ContactosPage> createState() => _ContactosPageState();
+}
 
+class _ContactosPageState extends ConsumerState<ContactosPage> {
+  // ===============================
+  // CONTROLADORES (NO SE RECREAN)
+  // ===============================
+  final TextEditingController searchCtrl = TextEditingController();
+  final TextEditingController nombreCtrl = TextEditingController();
+  final TextEditingController descripcionCtrl = TextEditingController();
+  final TextEditingController telefonoCtrl = TextEditingController();
+  final TextEditingController emailCtrl = TextEditingController();
+
+  bool asc = true;
+
+  @override
+  void dispose() {
+    searchCtrl.dispose();
+    nombreCtrl.dispose();
+    descripcionCtrl.dispose();
+    telefonoCtrl.dispose();
+    emailCtrl.dispose();
+    super.dispose();
+  }
+
+  // ===============================
+  // ACCIONES
+  // ===============================
   Future<void> llamar(String telefono) async {
     final uri = Uri.parse('tel:$telefono');
     if (await canLaunchUrl(uri)) {
@@ -20,7 +45,6 @@ class ContactosPage extends ConsumerWidget {
   }
 
   Future<void> enviarCorreo(String email) async {
-    // Intent mailto completo
     final mailtoUri = Uri(
       scheme: 'mailto',
       path: email,
@@ -30,40 +54,42 @@ class ContactosPage extends ConsumerWidget {
       },
     );
 
-    // Intent web Gmail (fallback)
-    final gmailWebUri = Uri.parse(
-      'https://mail.google.com/mail/?view=cm&to=$email',
-    );
-
-    //Intent nativo
-    final launched = await launchUrl(
-      mailtoUri,
-      mode: LaunchMode.externalApplication,
-    );
-
-    //Fallback seguro (SIEMPRE abre)
-    if (!launched) {
-      await launchUrl(gmailWebUri, mode: LaunchMode.externalApplication);
-    }
+    await launchUrl(mailtoUri, mode: LaunchMode.externalApplication);
   }
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  Widget build(BuildContext context) {
     final contactos = ref.watch(contactoProvider);
 
-    // ===============================
-    // CONTROLADORES (NUEVOS + EXISTENTES)
-    // ===============================
-    final TextEditingController nombreCtrl = TextEditingController();
-    final TextEditingController descripcionCtrl = TextEditingController();
-    final TextEditingController telefonoCtrl = TextEditingController();
-    final TextEditingController emailCtrl = TextEditingController();
-
     return Scaffold(
-      appBar: AppBar(title: const Text('Contactos')),
+      appBar: AppBar(
+        title: TextField(
+          controller: searchCtrl,
+          decoration: const InputDecoration(
+            hintText: 'Buscar contacto...',
+            border: InputBorder.none,
+            prefixIcon: Icon(Icons.search),
+          ),
+          onChanged: (value) {
+            ref.read(contactoProvider.notifier).buscar(value, asc);
+          },
+        ),
+        actions: [
+          IconButton(
+            icon: Icon(asc ? Icons.sort_by_alpha : Icons.sort),
+            onPressed: () {
+              asc = !asc;
+              ref
+                  .read(contactoProvider.notifier)
+                  .buscar(searchCtrl.text, asc);
+              setState(() {});
+            },
+          ),
+        ],
+      ),
 
       // ===============================
-      // BOTÓN AGREGAR CONTACTO
+      // BOTÓN AGREGAR
       // ===============================
       floatingActionButton: FloatingActionButton(
         child: const Icon(Icons.add),
@@ -74,34 +100,27 @@ class ContactosPage extends ConsumerWidget {
               title: const Text('Nuevo Contacto'),
               content: SingleChildScrollView(
                 child: Column(
-                  mainAxisSize: MainAxisSize.min,
                   children: [
                     TextField(
                       controller: nombreCtrl,
-                      decoration: const InputDecoration(labelText: 'Nombre'),
+                      decoration:
+                          const InputDecoration(labelText: 'Nombre'),
                     ),
                     TextField(
                       controller: descripcionCtrl,
-                      decoration: const InputDecoration(
-                        labelText: 'Descripción',
-                      ),
+                      decoration:
+                          const InputDecoration(labelText: 'Descripción'),
                     ),
-
-                    // ===============================
-                    // NUEVO: teléfono
-                    // ===============================
                     TextField(
                       controller: telefonoCtrl,
-                      decoration: const InputDecoration(labelText: 'Teléfono'),
+                      decoration:
+                          const InputDecoration(labelText: 'Teléfono'),
                       keyboardType: TextInputType.phone,
                     ),
-
-                    // ===============================
-                    // NUEVO: email
-                    // ===============================
                     TextField(
                       controller: emailCtrl,
-                      decoration: const InputDecoration(labelText: 'Email'),
+                      decoration:
+                          const InputDecoration(labelText: 'Email'),
                       keyboardType: TextInputType.emailAddress,
                     ),
                   ],
@@ -114,19 +133,7 @@ class ContactosPage extends ConsumerWidget {
                 ),
                 ElevatedButton(
                   onPressed: () async {
-                    if (nombreCtrl.text.isEmpty ||
-                        descripcionCtrl.text.isEmpty ||
-                        telefonoCtrl.text.isEmpty ||
-                        emailCtrl.text.isEmpty) {
-                      return;
-                    }
-
-                    // ===============================
-                    // Guardar telefono y mail
-                    // ===============================
-                    await ref
-                        .read(contactoProvider.notifier)
-                        .agregar(
+                    await ref.read(contactoProvider.notifier).agregar(
                           Contacto(
                             nombre: nombreCtrl.text,
                             description: descripcionCtrl.text,
@@ -135,6 +142,11 @@ class ContactosPage extends ConsumerWidget {
                             email: emailCtrl.text,
                           ),
                         );
+
+                    nombreCtrl.clear();
+                    descripcionCtrl.clear();
+                    telefonoCtrl.clear();
+                    emailCtrl.clear();
 
                     Navigator.pop(context);
                   },
@@ -147,16 +159,13 @@ class ContactosPage extends ConsumerWidget {
       ),
 
       // ===============================
-      // LISTADO DE CONTACTOS
+      // LISTA
       // ===============================
       body: contactos.when(
         data: (list) => ListView.builder(
           itemCount: list.length,
           itemBuilder: (_, i) => ListTile(
-            leading: list[i].foto.isNotEmpty
-                ? CircleAvatar(backgroundImage: FileImage(File(list[i].foto)))
-                : const CircleAvatar(child: Icon(Icons.person)),
-
+            leading: const CircleAvatar(child: Icon(Icons.person)),
             title: Text(list[i].nombre),
             subtitle: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -166,10 +175,6 @@ class ContactosPage extends ConsumerWidget {
                 Text(list[i].email),
               ],
             ),
-
-            // ===============================
-            // NUEVO: botones de acción
-            // ===============================
             trailing: Row(
               mainAxisSize: MainAxisSize.min,
               children: [

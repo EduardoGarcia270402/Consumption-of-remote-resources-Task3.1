@@ -1,7 +1,75 @@
-import 'package:sqflite/sqflite.dart';
+import 'package:drift/drift.dart';
+
+import '../../core/database/drift_servise.dart';
+//import 'package:sqflite/sqflite.dart';
 import '../../domain/entities/contacto.dart';
 
 class ContactoLocalDatasouse {
+  final DriftService db;
+
+  ContactoLocalDatasouse(this.db);
+
+  // Obtener todos
+  Future<List<Contacto>> obtenerContactos() async {
+    final result = await db.select(db.contactosTabla).get();
+
+    return result.map((c) => Contacto(
+      id: c.id,
+      nombre: c.nombre,
+      description: c.descripcion ?? '',
+      foto: c.foto ?? '',
+      telefono: c.telefono,
+      email: c.email,
+    )).toList();
+  }
+
+  // Insertar
+  Future<void> insertarContacto(Contacto c) async {
+    await db.into(db.contactosTabla).insert(
+      ContactosTablaCompanion.insert(
+        nombre: c.nombre,
+        descripcion: Value(c.description),
+        foto: Value(c.foto),
+        telefono: c.telefono,
+        email: c.email,
+      ),
+    );
+  }
+
+  // Buscar + ordenar
+  Future<List<Contacto>> buscar(String nombre, bool asc) async {
+    final query = db.select(db.contactosTabla)
+      ..where((t) => t.nombre.like('%$nombre%'))
+      ..orderBy([
+        (t) => OrderingTerm(
+          expression: t.nombre,
+          mode: asc ? OrderingMode.asc : OrderingMode.desc,
+        )
+      ]);
+
+    final result = await query.get();
+
+    return result.map((c) => Contacto(
+      id: c.id,
+      nombre: c.nombre,
+      description: c.descripcion ?? '',
+      foto: c.foto ?? '',
+      telefono: c.telefono,
+      email: c.email,
+    )).toList();
+  }
+
+
+
+
+
+
+
+
+
+
+
+  /*
   final Database db; // conexion a la base de datos
 
   ContactoLocalDatasouse(this.db);
@@ -34,4 +102,5 @@ class ContactoLocalDatasouse {
       'email': c.email,
     });
   }
+  */
 }

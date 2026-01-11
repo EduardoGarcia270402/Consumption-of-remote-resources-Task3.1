@@ -20,9 +20,30 @@ class ContactosPage extends ConsumerWidget {
   }
 
   Future<void> enviarCorreo(String email) async {
-    final uri = Uri.parse('mailto:$email');
-    if (await canLaunchUrl(uri)) {
-      await launchUrl(uri);
+    // Intent mailto completo
+    final mailtoUri = Uri(
+      scheme: 'mailto',
+      path: email,
+      queryParameters: {
+        'subject': 'Contacto desde la aplicación',
+        'body': 'Hola, te escribo desde la app de contactos.',
+      },
+    );
+
+    // Intent web Gmail (fallback)
+    final gmailWebUri = Uri.parse(
+      'https://mail.google.com/mail/?view=cm&to=$email',
+    );
+
+    //Intent nativo
+    final launched = await launchUrl(
+      mailtoUri,
+      mode: LaunchMode.externalApplication,
+    );
+
+    //Fallback seguro (SIEMPRE abre)
+    if (!launched) {
+      await launchUrl(gmailWebUri, mode: LaunchMode.externalApplication);
     }
   }
 
@@ -35,8 +56,8 @@ class ContactosPage extends ConsumerWidget {
     // ===============================
     final TextEditingController nombreCtrl = TextEditingController();
     final TextEditingController descripcionCtrl = TextEditingController();
-    final TextEditingController telefonoCtrl = TextEditingController(); // NUEVO
-    final TextEditingController emailCtrl = TextEditingController(); // NUEVO
+    final TextEditingController telefonoCtrl = TextEditingController();
+    final TextEditingController emailCtrl = TextEditingController();
 
     return Scaffold(
       appBar: AppBar(title: const Text('Contactos')),

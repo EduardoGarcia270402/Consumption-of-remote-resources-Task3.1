@@ -5,6 +5,8 @@ class Contacto {
   final String foto;
   final String telefono;
   final String email;
+  final bool favorito;
+
 
   Contacto({
     this.id,
@@ -13,5 +15,6 @@ class Contacto {
     required this.foto,
     required this.telefono,
     required this.email,
+    this.favorito = false,
   });
 }

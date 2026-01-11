@@ -71,6 +71,21 @@ class $ContactosTablaTable extends ContactosTabla
     type: DriftSqlType.string,
     requiredDuringInsert: true,
   );
+  static const VerificationMeta _favoritoMeta = const VerificationMeta(
+    'favorito',
+  );
+  @override
+  late final GeneratedColumn<bool> favorito = GeneratedColumn<bool>(
+    'favorito',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("favorito" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
   @override
   List<GeneratedColumn> get $columns => [
     id,
@@ -79,6 +94,7 @@ class $ContactosTablaTable extends ContactosTabla
     foto,
     telefono,
     email,
+    favorito,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -134,6 +150,12 @@ class $ContactosTablaTable extends ContactosTabla
     } else if (isInserting) {
       context.missing(_emailMeta);
     }
+    if (data.containsKey('favorito')) {
+      context.handle(
+        _favoritoMeta,
+        favorito.isAcceptableOrUnknown(data['favorito']!, _favoritoMeta),
+      );
+    }
     return context;
   }
 
@@ -167,6 +189,10 @@ class $ContactosTablaTable extends ContactosTabla
         DriftSqlType.string,
         data['${effectivePrefix}email'],
       )!,
+      favorito: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}favorito'],
+      )!,
     );
   }
 
@@ -184,6 +210,7 @@ class ContactosTablaData extends DataClass
   final String? foto;
   final String telefono;
   final String email;
+  final bool favorito;
   const ContactosTablaData({
     required this.id,
     required this.nombre,
@@ -191,6 +218,7 @@ class ContactosTablaData extends DataClass
     this.foto,
     required this.telefono,
     required this.email,
+    required this.favorito,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -205,6 +233,7 @@ class ContactosTablaData extends DataClass
     }
     map['telefono'] = Variable<String>(telefono);
     map['email'] = Variable<String>(email);
+    map['favorito'] = Variable<bool>(favorito);
     return map;
   }
 
@@ -218,6 +247,7 @@ class ContactosTablaData extends DataClass
       foto: foto == null && nullToAbsent ? const Value.absent() : Value(foto),
       telefono: Value(telefono),
       email: Value(email),
+      favorito: Value(favorito),
     );
   }
 
@@ -233,6 +263,7 @@ class ContactosTablaData extends DataClass
       foto: serializer.fromJson<String?>(json['foto']),
       telefono: serializer.fromJson<String>(json['telefono']),
       email: serializer.fromJson<String>(json['email']),
+      favorito: serializer.fromJson<bool>(json['favorito']),
     );
   }
   @override
@@ -245,6 +276,7 @@ class ContactosTablaData extends DataClass
       'foto': serializer.toJson<String?>(foto),
       'telefono': serializer.toJson<String>(telefono),
       'email': serializer.toJson<String>(email),
+      'favorito': serializer.toJson<bool>(favorito),
     };
   }
 
@@ -255,6 +287,7 @@ class ContactosTablaData extends DataClass
     Value<String?> foto = const Value.absent(),
     String? telefono,
     String? email,
+    bool? favorito,
   }) => ContactosTablaData(
     id: id ?? this.id,
     nombre: nombre ?? this.nombre,
@@ -262,6 +295,7 @@ class ContactosTablaData extends DataClass
     foto: foto.present ? foto.value : this.foto,
     telefono: telefono ?? this.telefono,
     email: email ?? this.email,
+    favorito: favorito ?? this.favorito,
   );
   ContactosTablaData copyWithCompanion(ContactosTablaCompanion data) {
     return ContactosTablaData(
@@ -273,6 +307,7 @@ class ContactosTablaData extends DataClass
       foto: data.foto.present ? data.foto.value : this.foto,
       telefono: data.telefono.present ? data.telefono.value : this.telefono,
       email: data.email.present ? data.email.value : this.email,
+      favorito: data.favorito.present ? data.favorito.value : this.favorito,
     );
   }
 
@@ -284,14 +319,15 @@ class ContactosTablaData extends DataClass
           ..write('descripcion: $descripcion, ')
           ..write('foto: $foto, ')
           ..write('telefono: $telefono, ')
-          ..write('email: $email')
+          ..write('email: $email, ')
+          ..write('favorito: $favorito')
           ..write(')'))
         .toString();
   }
 
   @override
   int get hashCode =>
-      Object.hash(id, nombre, descripcion, foto, telefono, email);
+      Object.hash(id, nombre, descripcion, foto, telefono, email, favorito);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -301,7 +337,8 @@ class ContactosTablaData extends DataClass
           other.descripcion == this.descripcion &&
           other.foto == this.foto &&
           other.telefono == this.telefono &&
-          other.email == this.email);
+          other.email == this.email &&
+          other.favorito == this.favorito);
 }
 
 class ContactosTablaCompanion extends UpdateCompanion<ContactosTablaData> {
@@ -311,6 +348,7 @@ class ContactosTablaCompanion extends UpdateCompanion<ContactosTablaData> {
   final Value<String?> foto;
   final Value<String> telefono;
   final Value<String> email;
+  final Value<bool> favorito;
   const ContactosTablaCompanion({
     this.id = const Value.absent(),
     this.nombre = const Value.absent(),
@@ -318,6 +356,7 @@ class ContactosTablaCompanion extends UpdateCompanion<ContactosTablaData> {
     this.foto = const Value.absent(),
     this.telefono = const Value.absent(),
     this.email = const Value.absent(),
+    this.favorito = const Value.absent(),
   });
   ContactosTablaCompanion.insert({
     this.id = const Value.absent(),
@@ -326,6 +365,7 @@ class ContactosTablaCompanion extends UpdateCompanion<ContactosTablaData> {
     this.foto = const Value.absent(),
     required String telefono,
     required String email,
+    this.favorito = const Value.absent(),
   }) : nombre = Value(nombre),
        telefono = Value(telefono),
        email = Value(email);
@@ -336,6 +376,7 @@ class ContactosTablaCompanion extends UpdateCompanion<ContactosTablaData> {
     Expression<String>? foto,
     Expression<String>? telefono,
     Expression<String>? email,
+    Expression<bool>? favorito,
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
@@ -344,6 +385,7 @@ class ContactosTablaCompanion extends UpdateCompanion<ContactosTablaData> {
       if (foto != null) 'foto': foto,
       if (telefono != null) 'telefono': telefono,
       if (email != null) 'email': email,
+      if (favorito != null) 'favorito': favorito,
     });
   }
 
@@ -354,6 +396,7 @@ class ContactosTablaCompanion extends UpdateCompanion<ContactosTablaData> {
     Value<String?>? foto,
     Value<String>? telefono,
     Value<String>? email,
+    Value<bool>? favorito,
   }) {
     return ContactosTablaCompanion(
       id: id ?? this.id,
@@ -362,6 +405,7 @@ class ContactosTablaCompanion extends UpdateCompanion<ContactosTablaData> {
       foto: foto ?? this.foto,
       telefono: telefono ?? this.telefono,
       email: email ?? this.email,
+      favorito: favorito ?? this.favorito,
     );
   }
 
@@ -386,6 +430,9 @@ class ContactosTablaCompanion extends UpdateCompanion<ContactosTablaData> {
     if (email.present) {
       map['email'] = Variable<String>(email.value);
     }
+    if (favorito.present) {
+      map['favorito'] = Variable<bool>(favorito.value);
+    }
     return map;
   }
 
@@ -397,7 +444,8 @@ class ContactosTablaCompanion extends UpdateCompanion<ContactosTablaData> {
           ..write('descripcion: $descripcion, ')
           ..write('foto: $foto, ')
           ..write('telefono: $telefono, ')
-          ..write('email: $email')
+          ..write('email: $email, ')
+          ..write('favorito: $favorito')
           ..write(')'))
         .toString();
   }
@@ -422,6 +470,7 @@ typedef $$ContactosTablaTableCreateCompanionBuilder =
       Value<String?> foto,
       required String telefono,
       required String email,
+      Value<bool> favorito,
     });
 typedef $$ContactosTablaTableUpdateCompanionBuilder =
     ContactosTablaCompanion Function({
@@ -431,6 +480,7 @@ typedef $$ContactosTablaTableUpdateCompanionBuilder =
       Value<String?> foto,
       Value<String> telefono,
       Value<String> email,
+      Value<bool> favorito,
     });
 
 class $$ContactosTablaTableFilterComposer
@@ -469,6 +519,11 @@ class $$ContactosTablaTableFilterComposer
 
   ColumnFilters<String> get email => $composableBuilder(
     column: $table.email,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get favorito => $composableBuilder(
+    column: $table.favorito,
     builder: (column) => ColumnFilters(column),
   );
 }
@@ -511,6 +566,11 @@ class $$ContactosTablaTableOrderingComposer
     column: $table.email,
     builder: (column) => ColumnOrderings(column),
   );
+
+  ColumnOrderings<bool> get favorito => $composableBuilder(
+    column: $table.favorito,
+    builder: (column) => ColumnOrderings(column),
+  );
 }
 
 class $$ContactosTablaTableAnnotationComposer
@@ -541,6 +601,9 @@ class $$ContactosTablaTableAnnotationComposer
 
   GeneratedColumn<String> get email =>
       $composableBuilder(column: $table.email, builder: (column) => column);
+
+  GeneratedColumn<bool> get favorito =>
+      $composableBuilder(column: $table.favorito, builder: (column) => column);
 }
 
 class $$ContactosTablaTableTableManager
@@ -586,6 +649,7 @@ class $$ContactosTablaTableTableManager
                 Value<String?> foto = const Value.absent(),
                 Value<String> telefono = const Value.absent(),
                 Value<String> email = const Value.absent(),
+                Value<bool> favorito = const Value.absent(),
               }) => ContactosTablaCompanion(
                 id: id,
                 nombre: nombre,
@@ -593,6 +657,7 @@ class $$ContactosTablaTableTableManager
                 foto: foto,
                 telefono: telefono,
                 email: email,
+                favorito: favorito,
               ),
           createCompanionCallback:
               ({
@@ -602,6 +667,7 @@ class $$ContactosTablaTableTableManager
                 Value<String?> foto = const Value.absent(),
                 required String telefono,
                 required String email,
+                Value<bool> favorito = const Value.absent(),
               }) => ContactosTablaCompanion.insert(
                 id: id,
                 nombre: nombre,
@@ -609,6 +675,7 @@ class $$ContactosTablaTableTableManager
                 foto: foto,
                 telefono: telefono,
                 email: email,
+                favorito: favorito,
               ),
           withReferenceMapper: (p0) => p0
               .map((e) => (e.readTable(table), BaseReferences(db, table, e)))

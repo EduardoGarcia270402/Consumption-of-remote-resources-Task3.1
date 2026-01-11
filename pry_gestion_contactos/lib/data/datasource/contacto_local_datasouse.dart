@@ -20,6 +20,7 @@ class ContactoLocalDatasouse {
       foto: c.foto ?? '',
       telefono: c.telefono,
       email: c.email,
+      favorito: c.favorito
     )).toList();
   }
 
@@ -56,10 +57,32 @@ class ContactoLocalDatasouse {
       foto: c.foto ?? '',
       telefono: c.telefono,
       email: c.email,
+      favorito: c.favorito
     )).toList();
   }
 
+//Favoritos y listar
+Future<void> cambiarFavorito(int id, bool valor) async {
+  await (db.update(db.contactosTabla)
+        ..where((c) => c.id.equals(id)))
+      .write(ContactosTablaCompanion(favorito: Value(valor)));
+}
 
+Future<List<Contacto>> obtenerFavoritos() async {
+  final result =
+      await (db.select(db.contactosTabla)..where((c) => c.favorito.equals(true)))
+          .get();
+
+      return result.map((c) => Contacto(
+      id: c.id,
+      nombre: c.nombre,
+      description: c.descripcion ?? '',
+      foto: c.foto ?? '',
+      telefono: c.telefono,
+      email: c.email,
+      favorito: c.favorito,
+    )).toList();
+}
 
 
 

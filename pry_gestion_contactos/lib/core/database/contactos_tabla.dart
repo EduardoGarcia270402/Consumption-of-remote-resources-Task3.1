@@ -7,4 +7,6 @@ class ContactosTabla extends Table{
     TextColumn get foto => text().nullable()();
     TextColumn get telefono => text()();
     TextColumn get email => text()();
+    BoolColumn get favorito => boolean().withDefault(const Constant(false))();
+
 }

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'presentation/views/contactos_page.dart';
+import 'presentation/views/home_page.dart';
 
 void main() {
   runApp(ProviderScope(child: MyApp()));
@@ -12,7 +12,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      home: ContactosPage(),
+      home: HomePage(),
       debugShowCheckedModeBanner: false,
     );
   }

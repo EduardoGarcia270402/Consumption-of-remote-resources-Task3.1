@@ -7,23 +7,21 @@ import '../../aplication/usecase/gestionar_contactos.dart';
 import '../../domain/entities/contacto.dart';
 
 /*definir el provider*/
-final contactoProvider = StateNotifierProvider<ContactoNotifier, AsyncValue<List<Contacto>>>(
-  (ref) => ContactoNotifier(),
-  
-);
+final contactoProvider =
+    StateNotifierProvider<ContactoNotifier, AsyncValue<List<Contacto>>>(
+      (ref) => ContactoNotifier(),
+    );
 
-class ContactoNotifier extends StateNotifier<AsyncValue<List<Contacto>>>{
-  ContactoNotifier() : super(AsyncLoading()){
+class ContactoNotifier extends StateNotifier<AsyncValue<List<Contacto>>> {
+  ContactoNotifier() : super(AsyncLoading()) {
     cargar();
   }
   late GestionarContactos usecase;
 
   Future<void> cargar() async {
-     final db = DriftService();
+    final db = DriftService();
     usecase = GestionarContactos(
-      ContactoRepositoryImpl(
-        ContactoLocalDatasouse(db)
-      ),
+      ContactoRepositoryImpl(ContactoLocalDatasouse(db)),
     );
     state = AsyncData(await usecase.listar());
   }
@@ -33,9 +31,16 @@ class ContactoNotifier extends StateNotifier<AsyncValue<List<Contacto>>>{
     cargar();
   }
 
-
   Future<void> buscar(String texto, bool asc) async {
     state = AsyncData(await usecase.buscar(texto, asc));
   }
-}
 
+  Future<void> toggleFavorito(Contacto c) async {
+    await usecase.cambiarFavorito(c.id!, !c.favorito);
+    cargar();
+  }
+
+  Future<void> cargarFavoritos() async {
+    state = AsyncData(await usecase.listarFavoritos());
+  }
+}

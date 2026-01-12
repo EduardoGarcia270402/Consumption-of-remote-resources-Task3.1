@@ -5,43 +5,58 @@ import 'package:path_provider/path_provider.dart';
 import 'package:path/path.dart' as p;
 
 import '../database/contactos_tabla.dart';
+import '../database/grupos_tabla.dart';
+import '../database/contacto_grupo_tabla.dart';
 
 part 'drift_servise.g.dart';
 
-@DriftDatabase(tables: [ContactosTabla])
+@DriftDatabase(tables: [ContactosTabla, GruposTabla, ContactoGrupoTabla])
 class DriftService extends _$DriftService {
   DriftService() : super(_openConnection());
 
   @override
-  int get schemaVersion => 1;
+  int get schemaVersion => 2;
 
   // ===============================
-  // NUEVO: OBTENER TODOS LOS CONTACTOS
+  // CONTACTOS
   // ===============================
   Future<List<ContactosTablaData>> obtenerContactos() {
     return select(contactosTabla).get();
   }
 
-  // ===============================
-  // NUEVO: ACTUALIZAR CONTACTO
-  // ===============================
   Future<void> actualizarContacto(ContactosTablaCompanion contacto) {
     return update(contactosTabla).replace(contacto);
   }
 
-  // ===============================
-  // NUEVO: ELIMINAR CONTACTO
-  // ===============================
   Future<void> eliminarContacto(int id) {
     return (delete(contactosTabla)..where((tbl) => tbl.id.equals(id))).go();
   }
 
-  // ===============================
-  // NUEVO: TOGGLE FAVORITO
-  // ===============================
   Future<void> toggleFavorito(int id, bool valor) {
     return (update(contactosTabla)..where((tbl) => tbl.id.equals(id))).write(
       ContactosTablaCompanion(favorito: Value(valor)),
+    );
+  }
+
+  // ===============================
+  // GRUPOS
+  // ===============================
+  Future<List<GruposTablaData>> obtenerGrupos() {
+    return select(gruposTabla).get();
+  }
+
+  Future<void> insertarGrupo(String nombre) {
+    return into(
+      gruposTabla,
+    ).insert(GruposTablaCompanion.insert(nombre: nombre));
+  }
+
+  Future<void> agregarContactoAGrupo(int contactoId, int grupoId) {
+    return into(contactoGrupoTabla).insert(
+      ContactoGrupoTablaCompanion.insert(
+        contactoId: contactoId,
+        grupoId: grupoId,
+      ),
     );
   }
 }

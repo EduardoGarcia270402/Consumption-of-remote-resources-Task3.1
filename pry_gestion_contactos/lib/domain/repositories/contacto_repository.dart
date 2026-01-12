@@ -8,5 +8,4 @@ abstract class ContactoRepository {
   Future<List<Contacto>> obtenerFavoritos();
   Future<void> editarContacto(Contacto contacto);
   Future<void> eliminarContacto(int id);
-
 }

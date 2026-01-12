@@ -43,4 +43,14 @@ class ContactoNotifier extends StateNotifier<AsyncValue<List<Contacto>>> {
   Future<void> cargarFavoritos() async {
     state = AsyncData(await usecase.listarFavoritos());
   }
+
+  Future<void> editar(Contacto c) async {
+    await usecase.editar(c);
+    cargar();
+  }
+
+  Future<void> eliminar(int id) async {
+    await usecase.eliminar(id);
+    cargar();
+  }
 }

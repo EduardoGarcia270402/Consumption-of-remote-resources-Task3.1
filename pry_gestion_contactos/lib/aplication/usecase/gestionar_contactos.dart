@@ -14,6 +14,7 @@ class GestionarContactos {
 
   Future<void> cambiarFavorito(int id, bool valor)=>repository.cambiarFavorito(id, valor);
   Future<List<Contacto>> listarFavoritos()=>repository.obtenerFavoritos();
-
+  Future<void> editar(Contacto c) => repository.editarContacto(c);
+  Future<void> eliminar(int id) => repository.eliminarContacto(id);
 
 }

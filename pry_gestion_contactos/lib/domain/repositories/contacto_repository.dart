@@ -6,5 +6,7 @@ abstract class ContactoRepository {
   Future<List<Contacto>> buscar(String nombre, bool asc);
   Future<void> cambiarFavorito(int id, bool valor);
   Future<List<Contacto>> obtenerFavoritos();
+  Future<void> editarContacto(Contacto contacto);
+  Future<void> eliminarContacto(int id);
 
 }

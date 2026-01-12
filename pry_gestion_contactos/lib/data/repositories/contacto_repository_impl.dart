@@ -22,4 +22,9 @@ class ContactoRepositoryImpl implements ContactoRepository {
   @override
   Future<List<Contacto>> obtenerFavoritos()=> local.obtenerFavoritos();
   
+  @override
+  Future<void> editarContacto(Contacto c) => local.actualizarContacto(c);
+
+  @override
+  Future<void> eliminarContacto(int id) => local.eliminarContacto(id);
 }

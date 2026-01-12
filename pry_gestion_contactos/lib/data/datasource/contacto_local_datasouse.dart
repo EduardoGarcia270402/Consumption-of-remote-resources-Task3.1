@@ -84,6 +84,27 @@ Future<List<Contacto>> obtenerFavoritos() async {
     )).toList();
 }
 
+  // Actualizar contacto
+  Future<void> actualizarContacto(Contacto c) async {
+    if (c.id == null) return;
+
+    await (db.update(db.contactosTabla)
+          ..where((t) => t.id.equals(c.id!)))
+        .write(ContactosTablaCompanion(
+      nombre: Value(c.nombre),
+      descripcion: Value(c.description),
+      foto: Value(c.foto),
+      telefono: Value(c.telefono),
+      email: Value(c.email),
+      favorito: Value(c.favorito),
+    ));
+  }
+
+  // Eliminar contacto
+  Future<void> eliminarContacto(int id) async {
+    await (db.delete(db.contactosTabla)..where((t) => t.id.equals(id))).go();
+  }
+
 
 
 

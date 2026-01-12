@@ -37,6 +37,72 @@ class ContactTile extends ConsumerWidget {
           Text(contacto.email),
         ],
       ),
+      onTap: () {
+        final nombreCtrl = TextEditingController(text: contacto.nombre);
+        final descripcionCtrl = TextEditingController(text: contacto.description);
+        final telefonoCtrl = TextEditingController(text: contacto.telefono);
+        final emailCtrl = TextEditingController(text: contacto.email);
+
+        showDialog(
+          context: context,
+          builder: (_) => AlertDialog(
+            title: const Text('Editar Contacto'),
+            content: SingleChildScrollView(
+              child: Column(
+                children: [
+                  TextField(controller: nombreCtrl, decoration: const InputDecoration(labelText: 'Nombre')),
+                  TextField(controller: descripcionCtrl, decoration: const InputDecoration(labelText: 'Descripción')),
+                  TextField(controller: telefonoCtrl, decoration: const InputDecoration(labelText: 'Teléfono'), keyboardType: TextInputType.phone),
+                  TextField(controller: emailCtrl, decoration: const InputDecoration(labelText: 'Email'), keyboardType: TextInputType.emailAddress),
+                ],
+              ),
+            ),
+            actions: [
+              TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancelar')),
+              TextButton(
+                onPressed: () {
+                  showDialog(
+                    context: context,
+                    builder: (_) => AlertDialog(
+                      title: const Text('Eliminar Contacto'),
+                      content: const Text('¿Estás seguro de que deseas eliminar este contacto?'),
+                      actions: [
+                        TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancelar')),
+                        ElevatedButton(
+                          onPressed: () async {
+                            await ref.read(contactoProvider.notifier).eliminar(contacto.id!);
+                            Navigator.pop(context); // close confirm
+                            Navigator.pop(context); // close edit dialog
+                          },
+                          child: const Text('Eliminar'),
+                        ),
+                      ],
+                    ),
+                  );
+                },
+                child: const Text('Eliminar', style: TextStyle(color: Colors.red)),
+              ),
+              ElevatedButton(
+                onPressed: () async {
+                  await ref.read(contactoProvider.notifier).editar(
+                    Contacto(
+                      id: contacto.id,
+                      nombre: nombreCtrl.text,
+                      description: descripcionCtrl.text,
+                      foto: contacto.foto,
+                      telefono: telefonoCtrl.text,
+                      email: emailCtrl.text,
+                      favorito: contacto.favorito,
+                    ),
+                  );
+                  Navigator.pop(context);
+                },
+                child: const Text('Guardar'),
+              ),
+            ],
+          ),
+        );
+      },
       trailing: Row(
         mainAxisSize: MainAxisSize.min,
         children: [

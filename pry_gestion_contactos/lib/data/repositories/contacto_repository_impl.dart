@@ -17,9 +17,15 @@ class ContactoRepositoryImpl implements ContactoRepository {
       local.buscar(nombre, asc);
 
   @override
-  Future<void> cambiarFavorito(int id, bool valor)=> local.cambiarFavorito(id, valor);
-  
+  Future<void> cambiarFavorito(int id, bool valor) =>
+      local.cambiarFavorito(id, valor);
+
   @override
-  Future<List<Contacto>> obtenerFavoritos()=> local.obtenerFavoritos();
-  
+  Future<List<Contacto>> obtenerFavoritos() => local.obtenerFavoritos();
+
+  @override
+  Future<void> editarContacto(Contacto c) => local.editarContacto(c);
+
+  @override
+  Future<void> eliminarContacto(int id) => local.eliminarContacto(id);
 }

@@ -79,8 +79,33 @@ class ContactTile extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     return ListTile(
-      leading: const CircleAvatar(child: Icon(Icons.person)),
-      title: Text(contacto.nombre),
+leading: Stack(
+          clipBehavior: Clip.none,
+          children: [
+            const CircleAvatar(child: Icon(Icons.person)),
+            // badge si teléfono o email inválido
+            if ((contacto.telefono.replaceAll(RegExp(r'\D'), '').length < 7) ||
+                !RegExp(r'^[^@]+@[^@]+\.[^@]+$').hasMatch(contacto.email))
+              Positioned(
+                right: -4,
+                top: -4,
+                child: CircleAvatar(
+                  radius: 10,
+                  backgroundColor: Colors.red,
+                  child: const Icon(Icons.error, size: 12, color: Colors.white),
+                ),
+              ),
+          ],
+        ),
+      title: Text(
+        contacto.nombre,
+        style: TextStyle(
+          color: ((contacto.telefono.replaceAll(RegExp(r'\D'), '').length < 7) ||
+                  !RegExp(r'^[^@]+@[^@]+\.[^@]+$').hasMatch(contacto.email))
+              ? Colors.red
+              : null,
+        ),
+      ),
 
       // 🔹 DESCRIPCIÓN + TELÉFONO + EMAIL
       subtitle: Column(
@@ -103,31 +128,49 @@ class ContactTile extends ConsumerWidget {
 
         showDialog(
           context: context,
-          builder: (_) => AlertDialog(
+          builder: (_) {
+            final _formKey = GlobalKey<FormState>();
+            return AlertDialog(
             title: const Text('Editar contacto'),
             content: SingleChildScrollView(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  TextField(
-                    controller: nombreCtrl,
-                    decoration: const InputDecoration(labelText: 'Nombre'),
-                  ),
-                  TextField(
-                    controller: descCtrl,
-                    decoration: const InputDecoration(labelText: 'Descripción'),
-                  ),
-                  TextField(
-                    controller: telCtrl,
-                    decoration: const InputDecoration(labelText: 'Teléfono'),
-                    keyboardType: TextInputType.phone,
-                  ),
-                  TextField(
-                    controller: emailCtrl,
-                    decoration: const InputDecoration(labelText: 'Email'),
-                    keyboardType: TextInputType.emailAddress,
-                  ),
-                ],
+              child: Form(
+                key: _formKey,
+                autovalidateMode: AutovalidateMode.disabled,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    TextFormField(
+                      controller: nombreCtrl,
+                      decoration: const InputDecoration(labelText: 'Nombre'),
+                      validator: (v) => (v == null || v.trim().isEmpty) ? 'Ingrese el nombre del contacto' : null,
+                    ),
+                    TextFormField(
+                      controller: descCtrl,
+                      decoration: const InputDecoration(labelText: 'Descripción'),
+                    ),
+                    TextFormField(
+                      controller: telCtrl,
+                      decoration: const InputDecoration(labelText: 'Teléfono'),
+                      keyboardType: TextInputType.phone,
+                      validator: (v) {
+                        final digits = (v ?? '').replaceAll(RegExp(r'\D'), '');
+                        if (digits.length < 7) return 'Teléfono inválido (mínimo 7 dígitos)';
+                        return null;
+                      },
+                    ),
+                    TextFormField(
+                      controller: emailCtrl,
+                      decoration: const InputDecoration(labelText: 'Email'),
+                      keyboardType: TextInputType.emailAddress,
+                      validator: (v) {
+                        final email = (v ?? '').trim();
+                        final emailRegex = RegExp(r'^[^@]+@[^@]+\.[^@]+$');
+                        if (!emailRegex.hasMatch(email)) return 'Email inválido';
+                        return null;
+                      },
+                    ),
+                  ],
+                ),
               ),
             ),
             actions: [
@@ -137,15 +180,21 @@ class ContactTile extends ConsumerWidget {
               ),
               ElevatedButton(
                 onPressed: () async {
+                  if (!(_formKey.currentState?.validate() ?? false)) return;
+
+                  final nombre = nombreCtrl.text.trim();
+                  final telefono = telCtrl.text.trim();
+                  final email = emailCtrl.text.trim();
+
                   await ref
                       .read(contactoProvider.notifier)
                       .editar(
                         Contacto(
                           id: contacto.id,
-                          nombre: nombreCtrl.text,
+                          nombre: nombre,
                           description: descCtrl.text,
-                          telefono: telCtrl.text,
-                          email: emailCtrl.text,
+                          telefono: telefono,
+                          email: email,
                           foto: contacto.foto,
                           favorito: contacto.favorito,
                         ),
@@ -155,7 +204,8 @@ class ContactTile extends ConsumerWidget {
                 child: const Text('Guardar'),
               ),
             ],
-          ),
+          );
+          }
         );
       },
 
@@ -183,9 +233,16 @@ class ContactTile extends ConsumerWidget {
                   title: const Text('Eliminar'),
                   onTap: () async {
                     Navigator.pop(context);
-                    await ref
-                        .read(contactoProvider.notifier)
-                        .eliminar(contacto.id!);
+                    try {
+                      await ref
+                          .read(contactoProvider.notifier)
+                          .eliminar(contacto.id!);
+                    } catch (e) {
+                      final msg = e.toString().replaceFirst('Exception: ', '');
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text(msg)),
+                      );
+                    }
                   },
                 ),
               ],

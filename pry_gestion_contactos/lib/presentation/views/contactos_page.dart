@@ -100,34 +100,52 @@ class _ContactosPageState extends ConsumerState<ContactosPage> {
       floatingActionButton: FloatingActionButton(
         child: const Icon(Icons.add),
         onPressed: () {
+          final _formKey = GlobalKey<FormState>();
+
           showDialog(
             context: context,
             builder: (_) => AlertDialog(
               title: const Text('Nuevo Contacto'),
               content: SingleChildScrollView(
-                child: Column(
-                  children: [
-                    TextField(
-                      controller: nombreCtrl,
-                      decoration: const InputDecoration(labelText: 'Nombre'),
-                    ),
-                    TextField(
-                      controller: descripcionCtrl,
-                      decoration: const InputDecoration(
-                        labelText: 'Descripción',
+                child: Form(
+                  key: _formKey,
+                  autovalidateMode: AutovalidateMode.disabled,
+                  child: Column(
+                    children: [
+                      TextFormField(
+                        controller: nombreCtrl,
+                        decoration: const InputDecoration(labelText: 'Nombre'),
+                        validator: (v) => (v == null || v.trim().isEmpty) ? 'Ingrese el nombre del contacto' : null,
                       ),
-                    ),
-                    TextField(
-                      controller: telefonoCtrl,
-                      decoration: const InputDecoration(labelText: 'Teléfono'),
-                      keyboardType: TextInputType.phone,
-                    ),
-                    TextField(
-                      controller: emailCtrl,
-                      decoration: const InputDecoration(labelText: 'Email'),
-                      keyboardType: TextInputType.emailAddress,
-                    ),
-                  ],
+                      TextFormField(
+                        controller: descripcionCtrl,
+                        decoration: const InputDecoration(
+                          labelText: 'Descripción',
+                        ),
+                      ),
+                      TextFormField(
+                        controller: telefonoCtrl,
+                        decoration: const InputDecoration(labelText: 'Teléfono'),
+                        keyboardType: TextInputType.phone,
+                        validator: (v) {
+                          final digits = (v ?? '').replaceAll(RegExp(r'\D'), '');
+                          if (digits.length < 7) return 'Teléfono inválido (mínimo 7 dígitos)';
+                          return null;
+                        },
+                      ),
+                      TextFormField(
+                        controller: emailCtrl,
+                        decoration: const InputDecoration(labelText: 'Email'),
+                        keyboardType: TextInputType.emailAddress,
+                        validator: (v) {
+                          final email = (v ?? '').trim();
+                          final emailRegex = RegExp(r'^[^@]+@[^@]+\.[^@]+$');
+                          if (!emailRegex.hasMatch(email)) return 'Email inválido';
+                          return null;
+                        },
+                      ),
+                    ],
+                  ),
                 ),
               ),
               actions: [
@@ -137,15 +155,21 @@ class _ContactosPageState extends ConsumerState<ContactosPage> {
                 ),
                 ElevatedButton(
                   onPressed: () async {
+                    if (!(_formKey.currentState?.validate() ?? false)) return;
+
+                    final nombre = nombreCtrl.text.trim();
+                    final telefono = telefonoCtrl.text.trim();
+                    final email = emailCtrl.text.trim();
+
                     await ref
                         .read(contactoProvider.notifier)
                         .agregar(
                           Contacto(
-                            nombre: nombreCtrl.text,
+                            nombre: nombre,
                             description: descripcionCtrl.text,
                             foto: '',
-                            telefono: telefonoCtrl.text,
-                            email: emailCtrl.text,
+                            telefono: telefono,
+                            email: email,
                           ),
                         );
 

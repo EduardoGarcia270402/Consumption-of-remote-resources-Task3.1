@@ -112,6 +112,16 @@ class ContactoLocalDatasouse {
 
   // Eliminar contacto
   Future<void> eliminarContacto(int id) async {
+    // Verificar si el contacto está asociado a algún grupo
+    final asociados = await (db.select(db.contactoGrupoTabla)
+          ..where((t) => t.contactoId.equals(id)))
+        .get();
+
+    if (asociados.isNotEmpty) {
+      // Lanzar excepción para indicar que no debe eliminarse
+      throw Exception('No se puede eliminar: el contacto pertenece a uno o más grupos');
+    }
+
     await (db.delete(db.contactosTabla)..where((t) => t.id.equals(id))).go();
   }
 

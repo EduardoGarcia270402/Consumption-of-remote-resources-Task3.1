@@ -2,6 +2,7 @@ import 'package:drift/drift.dart';
 
 import '../../core/database/drift_servise.dart';
 import '../../domain/entities/grupo.dart';
+import '../../domain/entities/contacto.dart';
 
 class GrupoLocalDatasource {
   final DriftService db;
@@ -41,12 +42,12 @@ class GrupoLocalDatasource {
   }
 
   // ===============================
-  // OBTENER CONTACTOS POR GRUPO
+  // OBTENER CONTACTOS POR GRUPO (COMPLETO)
   // ===============================
-  Future<List<String>> obtenerContactosPorGrupo(int grupoId) async {
+  Future<List<Contacto>> obtenerContactosPorGrupoCompleto(int grupoId) async {
     final query = db.customSelect(
       '''
-      SELECT c.nombre
+      SELECT c.*
       FROM contactos_tabla c
       INNER JOIN contacto_grupo_tabla cg
         ON c.id = cg.contacto_id
@@ -58,6 +59,26 @@ class GrupoLocalDatasource {
 
     final result = await query.get();
 
-    return result.map((row) => row.read<String>('nombre')).toList();
+    return result.map((row) {
+      // algunos campos pueden ser null en la BD, así que proveemos valores por defecto
+      return Contacto(
+        id: row.read<int>('id'),
+        nombre: row.read<String>('nombre'),
+        description: row.read<String?>('descripcion') ?? '',
+        foto: row.read<String?>('foto') ?? '',
+        telefono: row.read<String?>('telefono') ?? '',
+        email: row.read<String?>('email') ?? '',
+        favorito: row.read<bool?>('favorito') ?? false,
+      );
+    }).toList();
+  }
+
+  // ===============================
+  // QUITAR CONTACTO DE UN GRUPO
+  // ===============================
+  Future<void> quitarContactoDeGrupo(int contactoId, int grupoId) async {
+    await (db.delete(db.contactoGrupoTabla)
+          ..where((t) => t.contactoId.equals(contactoId) & t.grupoId.equals(grupoId)))
+        .go();
   }
 }
